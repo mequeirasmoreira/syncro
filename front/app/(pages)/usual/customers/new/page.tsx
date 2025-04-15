@@ -487,7 +487,7 @@ export default function NewCustomer() {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -1043,7 +1043,7 @@ export default function NewCustomer() {
                       id="parentesco"
                       name="parentesco"
                       value={formData.parentesco}
-                      onChange={handleInputChange as any}
+                      onChange={handleInputChange}
                       className={inputBaseStyle}
                       required
                     >

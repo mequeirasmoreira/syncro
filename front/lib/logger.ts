@@ -28,7 +28,6 @@ const logger = {
      * @param {unknown[]} args - Argumentos adicionais
      */
     info: (message: string, ...args: unknown[]) => {
-        // eslint-disable-next-line no-console
         console.info(`[INFO] ${message}`, ...args);
     },
 
@@ -38,7 +37,6 @@ const logger = {
      * @param {unknown[]} args - Argumentos adicionais
      */
     warn: (message: string, ...args: unknown[]) => {
-        // eslint-disable-next-line no-console
         console.warn(`[WARN] ${message}`, ...args);
     },
 
@@ -48,7 +46,6 @@ const logger = {
      * @param {unknown[]} args - Argumentos adicionais
      */
     error: (message: string, ...args: unknown[]) => {
-        // eslint-disable-next-line no-console
         console.error(`[ERROR] ${message}`, ...args);
         
         // Em produção, aqui poderíamos enviar o erro para um serviço de monitoramento

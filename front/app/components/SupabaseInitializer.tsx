@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import setupSupabaseResources from "@/lib/setupSupabase";
 import logger from "@/lib/logger";
 
 /**
@@ -11,19 +10,23 @@ import logger from "@/lib/logger";
 export default function SupabaseInitializer() {
   useEffect(() => {
     logger.debug("[SupabaseInitializer] - Inicializando recursos do Supabase");
-    
+
     const initializeSupabase = async () => {
       try {
-        await setupSupabaseResources();
-        logger.debug("[SupabaseInitializer] - Recursos do Supabase inicializados com sucesso");
+        logger.debug(
+          "[SupabaseInitializer] - Recursos do Supabase inicializados com sucesso"
+        );
       } catch (error) {
-        logger.error("[SupabaseInitializer] - Erro ao inicializar recursos do Supabase:", error);
+        logger.error(
+          "[SupabaseInitializer] - Erro ao inicializar recursos do Supabase:",
+          error
+        );
       }
     };
-    
+
     initializeSupabase();
   }, []);
-  
+
   // Este componente não renderiza nada visualmente
   return null;
 }
