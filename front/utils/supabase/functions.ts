@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { getSupabaseClient } from './client';
 import logger from '../../lib/logger';
 
 /**
@@ -10,7 +10,7 @@ export async function createCustomersTable() {
     logger.debug("[createCustomersTable] - Criando tabela 'customers'");
     
     // SQL para criar a tabela customers
-    const { error } = await supabase.rpc('execute_sql', {
+    const { error } = await getSupabaseClient().rpc('execute_sql', {
       sql: `
         CREATE TABLE IF NOT EXISTS customers (
           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -75,7 +75,7 @@ export async function setupCustomersTable() {
     logger.debug("[setupCustomersTable] - Verificando tabela 'customers'");
     
     // Verificar se a tabela existe
-    const { error } = await supabase
+    const { error } = await getSupabaseClient()
       .from('customers')
       .select('id')
       .limit(1);

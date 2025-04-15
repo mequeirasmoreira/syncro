@@ -21,12 +21,10 @@ import logger from "../../../../../lib/logger";
 import { useMask } from "@react-input/mask";
 import Toast from "../../../../components/Toast/Toast";
 import { getSupabaseClient } from "../../../../../utils/supabase/client";
-import { useAuth } from "../../../../../contexts/AuthContext";
 import Image from "next/image";
 
 export default function NewCustomer() {
   const { isDarkMode } = useTheme();
-  const { session } = useAuth();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [showToast, setShowToast] = useState(false);
