@@ -13,39 +13,42 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const logger = {
     /**
      * Registra mensagem de debug (apenas em desenvolvimento)
-     * @param message Mensagem principal
-     * @param args Argumentos adicionais
+     * @param {string} message - Mensagem principal
+     * @param {unknown[]} args - Argumentos adicionais
      */
-    debug: (message: string, ...args: any[]) => {
+    debug: (message: string, ...args: unknown[]) => {
         if (isDevelopment) {
-        console.debug(`[DEBUG] ${message}`, ...args);
+            console.debug(`[DEBUG] ${message}`, ...args);
         }
     },
 
     /**
      * Registra mensagem informativa
-     * @param message Mensagem principal
-     * @param args Argumentos adicionais
+     * @param {string} message - Mensagem principal
+     * @param {unknown[]} args - Argumentos adicionais
      */
-    info: (message: string, ...args: any[]) => {
+    info: (message: string, ...args: unknown[]) => {
+        // eslint-disable-next-line no-console
         console.info(`[INFO] ${message}`, ...args);
     },
 
     /**
      * Registra mensagem de aviso
-     * @param message Mensagem principal
-     * @param args Argumentos adicionais
+     * @param {string} message - Mensagem principal
+     * @param {unknown[]} args - Argumentos adicionais
      */
-    warn: (message: string, ...args: any[]) => {
+    warn: (message: string, ...args: unknown[]) => {
+        // eslint-disable-next-line no-console
         console.warn(`[WARN] ${message}`, ...args);
     },
 
     /**
      * Registra mensagem de erro
-     * @param message Mensagem principal
-     * @param args Argumentos adicionais
+     * @param {string} message - Mensagem principal
+     * @param {unknown[]} args - Argumentos adicionais
      */
-    error: (message: string, ...args: any[]) => {
+    error: (message: string, ...args: unknown[]) => {
+        // eslint-disable-next-line no-console
         console.error(`[ERROR] ${message}`, ...args);
         
         // Em produção, aqui poderíamos enviar o erro para um serviço de monitoramento

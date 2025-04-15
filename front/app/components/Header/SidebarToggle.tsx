@@ -1,6 +1,6 @@
 "use client";
 
-import { Bars3Icon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface SidebarToggleProps {
     isDarkMode: boolean;
@@ -18,7 +18,11 @@ export function SidebarToggle({ isDarkMode, isSidebarClosed, onToggle }: Sidebar
             : "text-gray-600 hover:bg-gray-100"
         }`}
         >
-            <Bars3Icon className="w-5 h-5" />
+            {isSidebarClosed ? (
+                <Bars3Icon className="w-5 h-5" />
+            ) : (
+                <XMarkIcon className="w-5 h-5" />
+            )}
         </button>
     );
 }

@@ -10,7 +10,7 @@ export async function setupSupabaseResources() {
     logger.debug("[setupSupabase] - Verificando recursos do Supabase");
     
     // Verificar se o bucket 'customers' existe
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    const { data: _buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
     if (bucketsError) {
       logger.error("[setupSupabase] - Erro ao listar buckets:", bucketsError);

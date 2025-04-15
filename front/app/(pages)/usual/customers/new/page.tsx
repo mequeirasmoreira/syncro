@@ -22,10 +22,11 @@ import { useMask } from "@react-input/mask";
 import Toast from "../../../../components/Toast/Toast";
 import { supabase } from "../../../../../utils/supabase/client";
 import { useAuth } from "../../../../../contexts/AuthContext";
+import Image from "next/image";
 
 export default function NewCustomer() {
   const { isDarkMode } = useTheme();
-  const { user, session } = useAuth();
+  const { session } = useAuth();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [showToast, setShowToast] = useState(false);
@@ -290,14 +291,14 @@ export default function NewCustomer() {
       // Função para converter data do formato DD/MM/YYYY para YYYY-MM-DD
       const formatDateForDB = (dateString: string) => {
         if (!dateString) return null;
-        
-        const parts = dateString.split('/');
+
+        const parts = dateString.split("/");
         if (parts.length !== 3) return null;
-        
+
         const day = parts[0];
         const month = parts[1];
         const year = parts[2];
-        
+
         return `${year}-${month}-${day}`;
       };
 
@@ -345,7 +346,11 @@ export default function NewCustomer() {
                     ""
                   ),
                   emergency_relationship: formData.parentesco,
-                  address: `${formData.endereco}, ${formData.numeroCasa}, ${formData.bairro}, ${formData.cep.replace(/[^\d]/g, "")}${formData.complemento ? ', ' + formData.complemento : ''}`,
+                  address: `${formData.endereco}, ${formData.numeroCasa}, ${
+                    formData.bairro
+                  }, ${formData.cep.replace(/[^\d]/g, "")}${
+                    formData.complemento ? ", " + formData.complemento : ""
+                  }`,
                   base_image_url: imagePath,
                 },
               ])
@@ -662,10 +667,12 @@ export default function NewCustomer() {
                     } transition-all duration-300 hover:border-emerald-400`}
                   >
                     {previewImage ? (
-                      <img
+                      <Image
                         src={previewImage}
                         alt="Foto do cliente"
                         className="w-full h-full object-cover"
+                        width={572}
+                        height={572}
                       />
                     ) : (
                       <div className="text-center p-4">
@@ -693,7 +700,7 @@ export default function NewCustomer() {
                             isDarkMode ? "text-neutral-500" : "text-gray-400"
                           }`}
                         >
-                          Clique em "Tirar foto" para capturar
+                          Clique em &rdquo;Tirar foto&rdquo; para capturar
                         </p>
                       </div>
                     )}
