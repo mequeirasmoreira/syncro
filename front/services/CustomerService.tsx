@@ -1,4 +1,4 @@
-import { supabase } from "../utils/supabase/client";
+import { getSupabaseClient } from "../utils/supabase/client";
 import ImageStorageService from "./ImageStorageService";
 import logger from "../lib/logger";
 import { Customer } from "@/types";
@@ -9,10 +9,19 @@ import { Customer } from "@/types";
  * @param base64Image Imagem em base64
  * @returns URL pública da imagem ou base64 se falhar
  */
-async function uploadAndLinkImage(customerId: number, base64Image: string): Promise<string> {
+async function uploadAndLinkImage(
+  customerId: number,
+  base64Image: string
+): Promise<string> {
   try {
-    const imageUrl = await ImageStorageService.salvarFotoBase(customerId.toString(), base64Image);
-    await supabase.from("customers").update({ base_image_url: imageUrl }).eq("id", customerId);
+    const imageUrl = await ImageStorageService.salvarFotoBase(
+      customerId.toString(),
+      base64Image
+    );
+    await getSupabaseClient()
+      .from("customers")
+      .update({ base_image_url: imageUrl })
+      .eq("id", customerId);
     return imageUrl;
   } catch (err) {
     logger.error(`[CustomerService] - uploadAndLinkImage - Erro:`, err);
@@ -24,8 +33,10 @@ export const CustomerService = {
   /**
    * Cria um cliente simples, sem imagem
    */
-  async createCustomer(data: Omit<Customer, "created_at" | "updated_at" | "base_image_url">): Promise<Customer> {
-    const { data: created, error } = await supabase
+  async createCustomer(
+    data: Omit<Customer, "created_at" | "updated_at" | "base_image_url">
+  ): Promise<Customer> {
+    const { data: created, error } = await getSupabaseClient()
       .from("customers")
       .insert(data)
       .select()
@@ -42,8 +53,11 @@ export const CustomerService = {
   /**
    * Atualiza dados de um cliente existente
    */
-  async updateCustomer(id: number, updates: Partial<Customer>): Promise<Customer> {
-    const { data: updated, error } = await supabase
+  async updateCustomer(
+    id: number,
+    updates: Partial<Customer>
+  ): Promise<Customer> {
+    const { data: updated, error } = await getSupabaseClient()
       .from("customers")
       .update(updates)
       .eq("id", id)
@@ -62,17 +76,20 @@ export const CustomerService = {
    * Cria um cliente e vincula uma imagem base64
    */
   async createCustomerWithImage(
-    data: Omit<Customer, "created_at" | "updated_at" | "base_image_url">, 
+    data: Omit<Customer, "created_at" | "updated_at" | "base_image_url">,
     base64Image: string
   ): Promise<Customer> {
-    const { data: created, error } = await supabase
+    const { data: created, error } = await getSupabaseClient()
       .from("customers")
       .insert(data)
       .select()
       .single();
 
     if (error) {
-      logger.error("[CustomerService] - createCustomerWithImage - Erro ao criar cliente:", error);
+      logger.error(
+        "[CustomerService] - createCustomerWithImage - Erro ao criar cliente:",
+        error
+      );
       throw error;
     }
 
@@ -82,7 +99,7 @@ export const CustomerService = {
       ...created,
       base_image_url: imageUrl,
     } as Customer;
-  }
+  },
 };
 
 export default CustomerService;
