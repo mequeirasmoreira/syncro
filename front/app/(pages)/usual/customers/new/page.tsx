@@ -20,7 +20,7 @@ import { useState, useRef, useEffect } from "react";
 import logger from "../../../../../lib/logger";
 import { useMask } from "@react-input/mask";
 import Toast from "../../../../components/Toast/Toast";
-import { supabase, getSupabaseClient } from "../../../../../utils/supabase/client";
+import { getSupabaseClient } from "../../../../../utils/supabase/client";
 import { useAuth } from "../../../../../contexts/AuthContext";
 import Image from "next/image";
 
@@ -237,8 +237,8 @@ export default function NewCustomer() {
         });
 
       // Fazer upload do arquivo para o bucket 'customers'
-      const { data, error } = await getSupabaseClient().storage
-        .from("customers")
+      const { data, error } = await getSupabaseClient()
+        .storage.from("customers")
         .upload(`photos/${fileName}`, blob, {
           contentType: "image/jpeg",
           upsert: true,
@@ -319,32 +319,33 @@ export default function NewCustomer() {
 
           try {
             // Salvar os dados do cliente na tabela 'customers'
-            const { data: customerData, error: customerError } = await getSupabaseClient()
-              .from("customers")
-              .insert([
-                {
-                  customer_name: formData.nome,
-                  surname: formData.sobrenome,
-                  nickname: formData.nickname,
-                  email: formData.email,
-                  birth_date: formatDateForDB(formData.dataNascimento),
-                  cpf: formData.cpf.replace(/[^\d]/g, ""),
-                  phone: formData.telefone.replace(/[^\d]/g, ""),
-                  emergency_name: formData.contatoEmergencia,
-                  emergency_phone: formData.telefoneEmergencia.replace(
-                    /[^\d]/g,
-                    ""
-                  ),
-                  emergency_relationship: formData.parentesco,
-                  address: `${formData.endereco}, ${formData.numeroCasa}, ${
-                    formData.bairro
-                  }, ${formData.cep.replace(/[^\d]/g, "")}${
-                    formData.complemento ? ", " + formData.complemento : ""
-                  }`,
-                  base_image_url: imagePath,
-                },
-              ])
-              .select();
+            const { data: customerData, error: customerError } =
+              await getSupabaseClient()
+                .from("customers")
+                .insert([
+                  {
+                    customer_name: formData.nome,
+                    surname: formData.sobrenome,
+                    nickname: formData.nickname,
+                    email: formData.email,
+                    birth_date: formatDateForDB(formData.dataNascimento),
+                    cpf: formData.cpf.replace(/[^\d]/g, ""),
+                    phone: formData.telefone.replace(/[^\d]/g, ""),
+                    emergency_name: formData.contatoEmergencia,
+                    emergency_phone: formData.telefoneEmergencia.replace(
+                      /[^\d]/g,
+                      ""
+                    ),
+                    emergency_relationship: formData.parentesco,
+                    address: `${formData.endereco}, ${formData.numeroCasa}, ${
+                      formData.bairro
+                    }, ${formData.cep.replace(/[^\d]/g, "")}${
+                      formData.complemento ? ", " + formData.complemento : ""
+                    }`,
+                    base_image_url: imagePath,
+                  },
+                ])
+                .select();
 
             if (customerError) {
               logger.error(
@@ -477,7 +478,9 @@ export default function NewCustomer() {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
