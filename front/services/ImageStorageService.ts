@@ -1,4 +1,4 @@
-import { supabase } from "../utils/supabase/client";
+import { getSupabaseClient } from "../utils/supabase/client";
 import { Buffer } from "buffer";
 import logger from "../lib/logger";
 
@@ -26,23 +26,8 @@ export const ImageStorageService = {
       const buffer = Buffer.from(base64Data, 'base64');
       const blob = new Blob([buffer], { type: 'image/jpeg' });
 
-      // Verificar se o bucket existe
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      
-      if (bucketsError) {
-        logger.error(`[ImageStorageService] - salvarFotoBase - Erro ao listar buckets:`, bucketsError);
-        throw new Error("Erro ao verificar buckets: " + bucketsError.message);
-      }
-      
-      const bucketExists = buckets.some(bucket => bucket.name === 'customers');
-      
-      if (!bucketExists) {
-        logger.error(`[ImageStorageService] - salvarFotoBase - Bucket 'customers' não encontrado`);
-        throw new Error("Bucket 'customers' não encontrado. Verifique a configuração do Supabase Storage.");
-      }
-
       // Upload da imagem
-      const { error } = await supabase.storage
+      const { error } = await getSupabaseClient().storage
         .from('customers')
         .upload(filePath, blob, { 
           upsert: true,
@@ -56,7 +41,7 @@ export const ImageStorageService = {
       }
 
       // Obter URL pública
-      const { data } = supabase.storage.from('customers').getPublicUrl(filePath);
+      const { data } = getSupabaseClient().storage.from('customers').getPublicUrl(filePath);
       
       if (!data || !data.publicUrl) {
         throw new Error("Não foi possível obter a URL pública da imagem");
