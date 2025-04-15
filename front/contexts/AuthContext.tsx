@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../utils/supabase/client";
+import { getSupabaseClient } from "../utils/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import logger from "../lib/logger";
 
@@ -9,11 +9,17 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{
     error: Error | null;
     data: Session | null;
   }>;
-  signUp: (email: string, password: string) => Promise<{
+  signUp: (
+    email: string,
+    password: string
+  ) => Promise<{
     error: Error | null;
     data: Session | null;
   }>;
@@ -29,15 +35,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     logger.debug("[AuthProvider] - Verificando sessão atual");
-    
+
     // Verificar se há uma sessão ativa
     const fetchSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      
+      const { data, error } = await getSupabaseClient().auth.getSession();
+
       if (error) {
         logger.error("[AuthProvider] - Erro ao buscar sessão:", error);
       }
-      
+
       setSession(data?.session || null);
       setUser(data?.session?.user || null);
       setIsLoading(false);
@@ -46,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchSession();
 
     // Configurar listener para mudanças na autenticação
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = getSupabaseClient().auth.onAuthStateChange(
       (event, newSession) => {
         logger.debug(`[AuthProvider] - Evento de autenticação: ${event}`);
         setSession(newSession);
@@ -65,12 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     logger.debug(`[AuthProvider] - Tentativa de login para: ${email}`);
     setIsLoading(true);
-    
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await getSupabaseClient().auth.signInWithPassword(
+        {
+          email,
+          password,
+        }
+      );
 
       if (error) {
         logger.error("[AuthProvider] - Erro no login:", error);
@@ -91,9 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string) => {
     logger.debug(`[AuthProvider] - Tentativa de cadastro para: ${email}`);
     setIsLoading(true);
-    
+
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await getSupabaseClient().auth.signUp({
         email,
         password,
       });
@@ -117,9 +125,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     logger.debug("[AuthProvider] - Realizando logout");
     setIsLoading(true);
-    
+
     try {
-      await supabase.auth.signOut();
+      await getSupabaseClient().auth.signOut();
       logger.debug("[AuthProvider] - Logout bem-sucedido");
     } catch (err) {
       logger.error("[AuthProvider] - Erro no logout:", err);
@@ -142,10 +150,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
     throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
-  
+
   return context;
 }
