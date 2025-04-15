@@ -20,7 +20,7 @@ import { useState, useRef, useEffect } from "react";
 import logger from "../../../../../lib/logger";
 import { useMask } from "@react-input/mask";
 import Toast from "../../../../components/Toast/Toast";
-import { supabase } from "../../../../../utils/supabase/client";
+import { supabase, getSupabaseClient } from "../../../../../utils/supabase/client";
 import { useAuth } from "../../../../../contexts/AuthContext";
 import Image from "next/image";
 
@@ -209,42 +209,37 @@ export default function NewCustomer() {
   // Função para fazer upload da imagem para o Supabase
   const uploadImageToSupabase = async (base64Image: string) => {
     try {
-      logger.debug("[NewCustomer] - uploadImageToSupabase - Iniciando upload");
+      logger.debug(
+        "[NewCustomer] - uploadImageToSupabase - Iniciando upload da imagem"
+      );
 
-      // Verificar se o usuário está autenticado
-      if (!session) {
-        logger.error(
-          "[NewCustomer] - uploadImageToSupabase - Usuário não autenticado"
-        );
-        throw new Error(
-          "Você precisa estar autenticado para fazer upload de imagens"
-        );
-      }
+      // Remover o prefixo da string base64
+      const base64WithoutPrefix = base64Image.replace(
+        /^data:image\/\w+;base64,/,
+        ""
+      );
 
-      // Remover o prefixo do base64
-      const base64Data = base64Image.split(",")[1];
-
-      // Converter base64 para ArrayBuffer
-      const binaryString = atob(base64Data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const arrayBuffer = bytes.buffer;
-
-      // Nome do arquivo baseado no CPF do cliente
+      // Criar um nome de arquivo único baseado no CPF do cliente
       const fileName = `${formData.cpf.replace(
         /[^\d]/g,
         ""
       )}_${Date.now()}.jpg`;
 
-      // Upload para o Supabase - assumindo que o bucket 'customers' já existe
-      logger.debug(
-        "[NewCustomer] - uploadImageToSupabase - Enviando arquivo para o bucket 'customers'"
-      );
-      const { data, error } = await supabase.storage
+      // Converter base64 para blob
+      const blob = await fetch(`data:image/jpeg;base64,${base64WithoutPrefix}`)
+        .then((res) => res.blob())
+        .catch((error) => {
+          logger.error(
+            "[NewCustomer] - uploadImageToSupabase - Erro ao converter base64 para blob:",
+            error
+          );
+          throw error;
+        });
+
+      // Fazer upload do arquivo para o bucket 'customers'
+      const { data, error } = await getSupabaseClient().storage
         .from("customers")
-        .upload(fileName, arrayBuffer, {
+        .upload(`photos/${fileName}`, blob, {
           contentType: "image/jpeg",
           upsert: true,
         });
@@ -257,17 +252,12 @@ export default function NewCustomer() {
         throw error;
       }
 
-      if (!data || !data.path) {
-        logger.error(
-          "[NewCustomer] - uploadImageToSupabase - Upload falhou: Nenhum dado retornado"
-        );
-        throw new Error("Upload falhou: Nenhum dado retornado do Supabase");
-      }
-
       logger.debug(
-        "[NewCustomer] - uploadImageToSupabase - Upload concluído:",
+        "[NewCustomer] - uploadImageToSupabase - Upload concluído com sucesso:",
         data
       );
+
+      // Retornar o caminho da imagem
       return data.path;
     } catch (error) {
       logger.error(
@@ -329,7 +319,7 @@ export default function NewCustomer() {
 
           try {
             // Salvar os dados do cliente na tabela 'customers'
-            const { data: customerData, error: customerError } = await supabase
+            const { data: customerData, error: customerError } = await getSupabaseClient()
               .from("customers")
               .insert([
                 {
