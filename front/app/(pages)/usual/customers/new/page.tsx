@@ -22,6 +22,7 @@ import { useMask } from "@react-input/mask";
 import Toast from "../../../../components/Toast/Toast";
 import { getSupabaseClient } from "../../../../../utils/supabase/client";
 import Image from "next/image";
+import { Breadcrumb } from "../../../../components/Breadcrumb/Breadcrumb";
 
 export default function NewCustomer() {
   const { isDarkMode } = useTheme();
@@ -541,13 +542,12 @@ export default function NewCustomer() {
     <RootLayout>
       <div className="w-full max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1
-            className={`text-2xl font-bold ${
-              isDarkMode ? "text-white" : "text-gray-800"
-            }`}
-          >
-            Cadastrar Cliente
-          </h1>
+          <Breadcrumb
+            parentLabel="Clientes"
+            parentHref="/usual/customers"
+            current="Cadastrar Cliente"
+            isDarkMode={isDarkMode}
+          />
 
           {/* Indicador de progresso */}
           <div className="flex items-center space-x-1">
@@ -571,7 +571,6 @@ export default function NewCustomer() {
             />
           </div>
         </div>
-
         <form onSubmit={handleSubmit} className="w-full">
           {/* Etapa 1: Foto e Informações Básicas */}
           {currentStep === 1 && (

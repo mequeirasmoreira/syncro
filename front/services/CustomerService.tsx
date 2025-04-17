@@ -1,4 +1,4 @@
-import { getSupabaseClient } from "../utils/supabase/client";
+import { getSupabaseClient, supabase } from "../utils/supabase/client";
 import ImageStorageService from "./ImageStorageService";
 import logger from "../lib/logger";
 import { Customer } from "@/types";
@@ -30,6 +30,28 @@ async function uploadAndLinkImage(
 }
 
 export const CustomerService = {
+  /**
+   * Lista todos os clientes cadastrados
+   * @returns Array de clientes
+   */
+  async listCustomers(): Promise<Customer[]> {
+    logger.debug(
+      `[CustomerService] - listCustomers - Buscando todos os clientes`
+    );
+
+    const { data, error } = await getSupabaseClient()
+      .from("customers")
+      .select("*")
+      .order("customer_name", { ascending: true });
+
+    if (error) {
+      logger.error("[CustomerService] - listCustomers - Erro:", error);
+      throw error;
+    }
+
+    return data as Customer[];
+  },
+
   /**
    * Cria um cliente simples, sem imagem
    */
@@ -70,6 +92,28 @@ export const CustomerService = {
     }
 
     return updated as Customer;
+  },
+
+  async getCustomerByCpf(cpf: string): Promise<Customer> {
+    logger.debug(`[CustomerService] - getCustomerByCpf - CPF: ${cpf}`);
+    
+    try {
+      const { data, error } = await getSupabaseClient()
+        .from('customers')
+        .select('*')
+        .eq('cpf', cpf)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Erro desconhecido ao buscar cliente por CPF';
+      
+      logger.debug(`[CustomerService] - getCustomerByCpf - Erro: ${errorMessage}`);
+      throw new Error(`Erro ao buscar cliente por CPF: ${errorMessage}`);
+    }
   },
 
   /**
