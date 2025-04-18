@@ -7,6 +7,9 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Customer } from "../../../../types";
 import CustomerService from "../../../../services/CustomerService";
+import { getSupabaseClient } from "../../../../utils/supabase/client";
+import logger from "../../../../lib/logger";
+import Image from "next/image";
 
 export default function CustomersPage() {
   const { isDarkMode } = useTheme();
@@ -17,11 +20,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Logger para registro de ações
-  const logger = {
-    debug: (message: string) => console.debug(message),
-  };
+  const [customerImageUrl, setCustomerImageUrl] = useState<string | null>(null);
 
   // Função para formatar data no padrão brasileiro
   const formatarData = (dataString: string | null | undefined) => {
@@ -107,6 +106,35 @@ export default function CustomersPage() {
       `[CustomersPage] - handleSelectCustomer - Customer CPF ${customer.cpf}`
     );
     setSelectedCustomer(customer);
+    
+    // Se o cliente possui um caminho de imagem, buscar a URL completa
+    if (customer.base_image_url) {
+      getCustomerImageURL(customer.base_image_url);
+    } else {
+      setCustomerImageUrl(null);
+    }
+  };
+
+  // Função para obter a URL completa da imagem usando o cliente Supabase
+  const getCustomerImageURL = async (imagePath: string) => {
+    try {
+      logger.debug(`[CustomersPage] - getCustomerImageURL - Obtendo URL da imagem: ${imagePath}`);
+      
+      // Criar cliente Supabase
+      const supabase = getSupabaseClient();
+      
+      // Obter URL pública da imagem
+      const { data } = supabase
+        .storage
+        .from('customers')
+        .getPublicUrl(imagePath);
+      
+      logger.debug(`[CustomersPage] - getCustomerImageURL - URL obtida com sucesso: ${data.publicUrl}`);
+      setCustomerImageUrl(data.publicUrl);
+    } catch (error) {
+      logger.error(`[CustomersPage] - getCustomerImageURL - Erro: ${error instanceof Error ? error.message : String(error)}`);
+      setCustomerImageUrl(null);
+    }
   };
 
   // Função para pesquisar clientes
@@ -349,10 +377,12 @@ export default function CustomersPage() {
               >
                 <div className="flex items-center">
                   <div className="w-14 h-14 rounded-full bg-gray-200 mr-4 flex items-center justify-center overflow-hidden">
-                    {selectedCustomer.base_image_url ? (
-                      <img
-                        src={selectedCustomer.base_image_url}
+                    {selectedCustomer.base_image_url && customerImageUrl ? (
+                      <Image
+                        src={customerImageUrl}
                         alt={`${selectedCustomer.customer_name} ${selectedCustomer.surname}`}
+                        width={56}
+                        height={56}
                         className="w-full h-full object-cover"
                       />
                     ) : (
