@@ -387,270 +387,268 @@ export default function SchedulingPage() {
 
   return (
     <RootLayout>
+      <div className="flex flex-col h-full max-h-[calc(100vh-4rem)] overflow-hidden">
+        {/* Cabeçalho */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+          <div>
+            <h1
+              className={`text-2xl font-semibold ${
+                isDarkMode ? "text-white" : "text-gray-800"
+              }`}
+            >
+              Agendamentos
+            </h1>
+            <p className={isDarkMode ? "text-slate-400" : "text-gray-500"}>
+              {format(selectedDate, "EEEE, dd 'de' MMMM 'de' yyyy", {
+                locale: ptBR,
+              })}
+            </p>
+          </div>
 
-        <div className="flex flex-col h-full max-h-[calc(100vh-4rem)] overflow-hidden">
-          {/* Cabeçalho */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-            <div>
-              <h1
-                className={`text-2xl font-semibold ${
-                  isDarkMode ? "text-white" : "text-gray-800"
-                }`}
+          <div className="flex mt-4 md:mt-0 gap-4">
+            {/* Botão de novo agendamento */}
+            <button
+              onClick={handleCreateNew}
+              className={`px-4 py-2 rounded-md flex items-center gap-2 ${
+                isDarkMode
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                  : "bg-emerald-500 text-white hover:bg-emerald-600"
+              }`}
+              aria-label="Criar novo agendamento"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-5 h-5"
               >
-                Agendamentos
-              </h1>
-              <p className={isDarkMode ? "text-slate-400" : "text-gray-500"}>
-                {format(selectedDate, "EEEE, dd 'de' MMMM 'de' yyyy", {
-                  locale: ptBR,
-                })}
-              </p>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Novo Agendamento
+            </button>
 
-            <div className="flex mt-4 md:mt-0 gap-4">
-              {/* Botão de novo agendamento */}
+            {/* Seletor de visualização */}
+            <div
+              className={`flex rounded-md overflow-hidden border ${
+                isDarkMode ? "border-neutral-600" : "border-slate-300"
+              }`}
+            >
               <button
-                onClick={handleCreateNew}
-                className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-                  isDarkMode
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "bg-emerald-500 text-white hover:bg-emerald-600"
+                onClick={() => setViewMode("day")}
+                aria-pressed={viewMode === "day"}
+                className={`px-3 py-1 text-sm ${
+                  viewMode === "day"
+                    ? isDarkMode
+                      ? "bg-emerald-600 text-white"
+                      : "bg-emerald-500 text-white"
+                    : isDarkMode
+                    ? "bg-neutral-700 text-white hover:bg-neutral-600"
+                    : "bg-slate-200 text-slate-800 hover:bg-slate-300"
                 }`}
-                aria-label="Criar novo agendamento"
               >
+                Dia
+              </button>
+              <button
+                onClick={() => setViewMode("week")}
+                aria-pressed={viewMode === "week"}
+                className={`px-3 py-1 text-sm ${
+                  viewMode === "week"
+                    ? isDarkMode
+                      ? "bg-emerald-600 text-white"
+                      : "bg-emerald-500 text-white"
+                    : isDarkMode
+                    ? "bg-neutral-700 text-white hover:bg-neutral-600"
+                    : "bg-slate-200 text-slate-800 hover:bg-slate-300"
+                }`}
+              >
+                Semana
+              </button>
+              <button
+                onClick={() => setViewMode("month")}
+                aria-pressed={viewMode === "month"}
+                className={`px-3 py-1 text-sm ${
+                  viewMode === "month"
+                    ? isDarkMode
+                      ? "bg-emerald-600 text-white"
+                      : "bg-emerald-500 text-white"
+                    : isDarkMode
+                    ? "bg-neutral-700 text-white hover:bg-neutral-600"
+                    : "bg-slate-200 text-slate-800 hover:bg-slate-300"
+                }`}
+                disabled={true} // Ainda não implementado
+              >
+                Mês (em breve)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Layout principal em 3 colunas */}
+        <div className="flex flex-col md:flex-row h-[calc(100vh-10rem)] overflow-hidden">
+          {/* Coluna do calendário (esquerda) */}
+          <div
+            className={`w-full md:w-64 p-4 rounded-lg mb-4 md:mb-0 md:mr-4 overflow-auto ${
+              isDarkMode
+                ? "bg-neutral-800"
+                : "bg-white border border-gray-200"
+            }`}
+          >
+            <Calendar
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
+            />
+          </div>
+
+          {/* Coluna de agendamentos (central) */}
+          <div
+            className={`flex-1 rounded-lg p-4 mb-4 md:mb-0 overflow-hidden flex flex-col ${
+              isDarkMode
+                ? "bg-neutral-800"
+                : "bg-white border border-gray-200"
+            }`}
+          >
+            {/* Filtros */}
+            <div className="mb-4 space-y-3">
+              {/* Filtro de busca por nome */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar por nome do cliente..."
+                  value={searchQuery}
+                  onChange={(e) =>
+                    handleFilterChange("search", e.target.value)
+                  }
+                  className={`pl-8 w-full p-2 rounded-md border ${
+                    isDarkMode
+                      ? "bg-neutral-700 text-white border-neutral-600"
+                      : "bg-white text-gray-900 border-gray-300"
+                  } focus:outline-none focus:ring-1 focus:ring-indigo-500`}
+                />
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  className="w-5 h-5"
+                  className="w-4 h-4 absolute left-2 top-3 text-gray-400"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 4v16m8-8H4"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
-                Novo Agendamento
-              </button>
+              </div>
 
-              {/* Seletor de visualização */}
-              <div
-                className={`flex rounded-md overflow-hidden border ${
-                  isDarkMode ? "border-neutral-600" : "border-slate-300"
-                }`}
-              >
-                <button
-                  onClick={() => setViewMode("day")}
-                  aria-pressed={viewMode === "day"}
-                  className={`px-3 py-1 text-sm ${
-                    viewMode === "day"
-                      ? isDarkMode
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-500 text-white"
-                      : isDarkMode
-                      ? "bg-neutral-700 text-white hover:bg-neutral-600"
-                      : "bg-slate-200 text-slate-800 hover:bg-slate-300"
+              {/* Filtros em linha */}
+              <div className="flex flex-wrap gap-2">
+                {/* Filtro de status */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) =>
+                    handleFilterChange("status", e.target.value)
+                  }
+                  className={`p-2 rounded-md text-sm ${
+                    isDarkMode
+                      ? "bg-neutral-700 text-white border-neutral-600"
+                      : "bg-white text-gray-900 border-gray-300"
+                  } border focus:outline-none focus:ring-1 focus:ring-indigo-500`}
+                >
+                  <option value="all">Todos os status</option>
+                  <option value="Pendente">
+                    {STATUS_DISPLAY["Pendente"]}
+                  </option>
+                  <option value="Concluido">
+                    {STATUS_DISPLAY["Concluido"]}
+                  </option>
+                  <option value="Cancelado">
+                    {STATUS_DISPLAY["Cancelado"]}
+                  </option>
+                  <option value="Reagendado">
+                    {STATUS_DISPLAY["Reagendado"]}
+                  </option>
+                </select>
+
+                {/* Filtro de profissional */}
+                <select
+                  value={professionalFilter}
+                  onChange={(e) =>
+                    handleFilterChange("professional", e.target.value)
+                  }
+                  className={`p-2 rounded-md text-sm ${
+                    isDarkMode
+                      ? "bg-neutral-700 text-white border-neutral-600"
+                      : "bg-white text-gray-900 border-gray-300"
+                  } border focus:outline-none focus:ring-1 focus:ring-indigo-500`}
+                >
+                  <option value="all">Todos os profissionais</option>
+                  {professionals.map((professional) => (
+                    <option key={professional.id} value={professional.id}>
+                      {professional.professional_name}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Indicador de resultados */}
+                <div
+                  className={`ml-auto text-sm ${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  Dia
-                </button>
-                <button
-                  onClick={() => setViewMode("week")}
-                  aria-pressed={viewMode === "week"}
-                  className={`px-3 py-1 text-sm ${
-                    viewMode === "week"
-                      ? isDarkMode
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-500 text-white"
-                      : isDarkMode
-                      ? "bg-neutral-700 text-white hover:bg-neutral-600"
-                      : "bg-slate-200 text-slate-800 hover:bg-slate-300"
-                  }`}
-                >
-                  Semana
-                </button>
-                <button
-                  onClick={() => setViewMode("month")}
-                  aria-pressed={viewMode === "month"}
-                  className={`px-3 py-1 text-sm ${
-                    viewMode === "month"
-                      ? isDarkMode
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-500 text-white"
-                      : isDarkMode
-                      ? "bg-neutral-700 text-white hover:bg-neutral-600"
-                      : "bg-slate-200 text-slate-800 hover:bg-slate-300"
-                  }`}
-                  disabled={true} // Ainda não implementado
-                >
-                  Mês (em breve)
-                </button>
+                  {filteredAppointments.length} resultado(s)
+                </div>
               </div>
             </div>
+
+            <AppointmentList
+              appointments={filteredAppointments}
+              isLoading={isLoading}
+              selectedAppointment={selectedAppointment}
+              onSelectAppointment={handleAppointmentSelect}
+              onCreateNew={handleCreateNew}
+              selectedDate={selectedDate}
+              customers={customers}
+              professionals={professionals}
+              services={services}
+              rooms={rooms}
+            />
           </div>
 
-          {/* Layout principal em 3 colunas */}
-          <div className="flex flex-col md:flex-row h-[calc(100vh-10rem)] overflow-hidden">
-            {/* Coluna do calendário (esquerda) */}
-            <div
-              className={`w-full md:w-64 p-4 rounded-lg mb-4 md:mb-0 md:mr-4 overflow-auto ${
-                isDarkMode
-                  ? "bg-neutral-800"
-                  : "bg-white border border-gray-200"
-              }`}
-            >
-              <Calendar
-                selectedDate={selectedDate}
-                onDateSelect={handleDateSelect}
-              />
-            </div>
-
-            {/* Coluna de agendamentos (central) */}
-            <div
-              className={`flex-1 rounded-lg p-4 mb-4 md:mb-0 overflow-hidden flex flex-col ${
-                isDarkMode
-                  ? "bg-neutral-800"
-                  : "bg-white border border-gray-200"
-              }`}
-            >
-              {/* Filtros */}
-              <div className="mb-4 space-y-3">
-                {/* Filtro de busca por nome */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar por nome do cliente..."
-                    value={searchQuery}
-                    onChange={(e) =>
-                      handleFilterChange("search", e.target.value)
-                    }
-                    className={`pl-8 w-full p-2 rounded-md border ${
-                      isDarkMode
-                        ? "bg-neutral-700 text-white border-neutral-600"
-                        : "bg-white text-gray-900 border-gray-300"
-                    } focus:outline-none focus:ring-1 focus:ring-indigo-500`}
-                  />
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="w-4 h-4 absolute left-2 top-3 text-gray-400"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-
-                {/* Filtros em linha */}
-                <div className="flex flex-wrap gap-2">
-                  {/* Filtro de status */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    }
-                    className={`p-2 rounded-md text-sm ${
-                      isDarkMode
-                        ? "bg-neutral-700 text-white border-neutral-600"
-                        : "bg-white text-gray-900 border-gray-300"
-                    } border focus:outline-none focus:ring-1 focus:ring-indigo-500`}
-                  >
-                    <option value="all">Todos os status</option>
-                    <option value="Pendente">
-                      {STATUS_DISPLAY["Pendente"]}
-                    </option>
-                    <option value="Concluido">
-                      {STATUS_DISPLAY["Concluido"]}
-                    </option>
-                    <option value="Cancelado">
-                      {STATUS_DISPLAY["Cancelado"]}
-                    </option>
-                    <option value="Reagendado">
-                      {STATUS_DISPLAY["Reagendado"]}
-                    </option>
-                  </select>
-
-                  {/* Filtro de profissional */}
-                  <select
-                    value={professionalFilter}
-                    onChange={(e) =>
-                      handleFilterChange("professional", e.target.value)
-                    }
-                    className={`p-2 rounded-md text-sm ${
-                      isDarkMode
-                        ? "bg-neutral-700 text-white border-neutral-600"
-                        : "bg-white text-gray-900 border-gray-300"
-                    } border focus:outline-none focus:ring-1 focus:ring-indigo-500`}
-                  >
-                    <option value="all">Todos os profissionais</option>
-                    {professionals.map((professional) => (
-                      <option key={professional.id} value={professional.id}>
-                        {professional.professional_name}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Indicador de resultados */}
-                  <div
-                    className={`ml-auto text-sm ${
-                      isDarkMode ? "text-gray-300" : "text-gray-600"
-                    }`}
-                  >
-                    {filteredAppointments.length} resultado(s)
-                  </div>
-                </div>
+          {/* Coluna de detalhes (direita) */}
+          <div
+            className={`w-full md:w-80 md:ml-4 rounded-lg p-4 overflow-y-auto ${
+              isDarkMode
+                ? "bg-neutral-800"
+                : "bg-white border border-slate-200"
+            }`}
+          >
+            {!selectedAppointment ? (
+              <div
+                className={`text-center py-8 ${
+                  isDarkMode ? "text-slate-300" : "text-neutral-700"
+                }`}
+              >
+                <p>Selecione um agendamento para ver os detalhes</p>
+                <p className="text-sm mt-1">
+                  ou clique em "Novo Agendamento" para criar
+                </p>
               </div>
-
-              <AppointmentList
-                appointments={filteredAppointments}
-                isLoading={isLoading}
-                selectedAppointment={selectedAppointment}
-                onSelectAppointment={handleAppointmentSelect}
-                onCreateNew={handleCreateNew}
-                selectedDate={selectedDate}
+            ) : (
+              <AppointmentDetails
+                appointment={selectedAppointment}
                 customers={customers}
                 professionals={professionals}
                 services={services}
                 rooms={rooms}
+                onStatusChange={handleStatusChange}
               />
-            </div>
-
-            {/* Coluna de detalhes (direita) */}
-            <div
-              className={`w-full md:w-80 md:ml-4 rounded-lg p-4 overflow-y-auto ${
-                isDarkMode
-                  ? "bg-neutral-800"
-                  : "bg-white border border-slate-200"
-              }`}
-            >
-              {!selectedAppointment ? (
-                <div
-                  className={`text-center py-8 ${
-                    isDarkMode ? "text-slate-300" : "text-neutral-700"
-                  }`}
-                >
-                  <p>Selecione um agendamento para ver os detalhes</p>
-                  <p className="text-sm mt-1">
-                    ou clique em "Novo Agendamento" para criar
-                  </p>
-                </div>
-              ) : (
-                <AppointmentDetails
-                  appointment={selectedAppointment}
-                  customers={customers}
-                  professionals={professionals}
-                  services={services}
-                  rooms={rooms}
-                  onStatusChange={handleStatusChange}
-                />
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
