@@ -6,14 +6,14 @@
  * Composta por três seções: calendário, lista de agendamentos e detalhes
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { useRouter } from "next/navigation";
 import RootLayout from "@/app/components/RootLayout";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logger from "@/lib/logger";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 // Componentes específicos para agendamentos
 import Calendar from "@/app/(pages)/usual/scheduling/components/Calendar";
@@ -30,45 +30,6 @@ import {
   Room,
   AppointmentForm as AppointmentFormType,
 } from "@/services/AppointmentService";
-
-// Implementação da funcionalidade de notificação de voz
-const useSpeechNotification = () => {
-  const [speechSupported, setSpeechSupported] = useState(false);
-
-  useEffect(() => {
-    // Verificar suporte à síntese de voz
-    const supported = "speechSynthesis" in window;
-    setSpeechSupported(supported);
-
-    if (supported) {
-      logger.debug(
-        `[SchedulingPage] - useSpeechNotification - Síntese de voz suportada pelo navegador`
-      );
-    } else {
-      logger.debug(
-        `[SchedulingPage] - useSpeechNotification - Síntese de voz não suportada pelo navegador`
-      );
-    }
-  }, []);
-
-  const speak = (message: string) => {
-    if (!speechSupported) return;
-
-    // Cancelar qualquer fala anterior
-    window.speechSynthesis.cancel();
-
-    logger.debug(`[SchedulingPage] - speak - Mensagem: ${message}`);
-
-    // Criar nova instância de fala
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.lang = "pt-BR";
-
-    // Falar a mensagem
-    window.speechSynthesis.speak(utterance);
-  };
-
-  return { speak, speechSupported };
-};
 
 // Type para mapear status para exibição
 type StatusDisplayMap = {
@@ -99,7 +60,6 @@ const displayToInternalStatus = (
 export default function SchedulingPage() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
-  const { speak, speechSupported } = useSpeechNotification();
 
   // Estado para gerenciar a visualização (dia, semana, mês)
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
@@ -128,10 +88,72 @@ export default function SchedulingPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [professionalFilter, setProfessionalFilter] = useState<string>("all");
 
+  // Função para buscar agendamentos para a data selecionada
+  const fetchAppointmentsForDate = async (date: Date) => {
+    logger.debug(
+      `[SchedulingPage] - fetchAppointmentsForDate - Data: ${format(
+        date,
+        "dd/MM/yyyy"
+      )}`
+    );
+
+    if (!date) return;
+
+    try {
+      setIsLoading(true);
+
+      // Formatar a data para o formato esperado pela API
+      const formattedDate = format(date, "yyyy-MM-dd");
+
+      // Buscar os agendamentos para a data
+      const result = await appointmentService.getAppointmentsByDate(
+        formattedDate
+      );
+
+      if (result) {
+        setAppointments(result);
+        // Aplicar filtros aos novos dados
+        const filtered = applyFilters(
+          result,
+          searchQuery,
+          statusFilter,
+          professionalFilter
+        );
+        setFilteredAppointments(filtered);
+
+        logger.debug(
+          `[SchedulingPage] - fetchAppointmentsForDate - ${result.length} agendamentos encontrados`
+        );
+
+        // Se houver um agendamento selecionado, atualizar com dados mais recentes
+        if (selectedAppointment) {
+          const updated = result.find((a) => a.id === selectedAppointment.id);
+          if (updated) {
+            setSelectedAppointment(updated);
+          } else {
+            setSelectedAppointment(null);
+          }
+        }
+      }
+    } catch (error) {
+      logger.error(
+        `[SchedulingPage] - fetchAppointmentsForDate - Erro: ${error}`
+      );
+      toast.error("Erro ao buscar agendamentos. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAppointmentsForDateCallback = useCallback(
+    (date: Date) => fetchAppointmentsForDate(date),
+    [searchQuery, statusFilter, professionalFilter, selectedAppointment]
+  );
+
   // Carregar agendamentos da data selecionada
   useEffect(() => {
-    fetchAppointmentsForDate(selectedDate);
-  }, [selectedDate]);
+    fetchAppointmentsForDateCallback(selectedDate);
+  }, [selectedDate, fetchAppointmentsForDateCallback]);
 
   // Carregar dados de relacionamento ao inicializar
   useEffect(() => {
@@ -164,78 +186,13 @@ export default function SchedulingPage() {
     }
   };
 
-  // Buscar agendamentos para a data selecionada
-  const fetchAppointmentsForDate = async (date: Date) => {
-    logger.debug(
-      `[SchedulingPage] - fetchAppointmentsForDate - Data: ${format(
-        date,
-        "yyyy-MM-dd"
-      )}`
-    );
-
-    setIsLoading(true);
-    setSelectedAppointment(null);
-
-    try {
-      let appointmentsData: Appointment[] = [];
-
-      // Buscar agendamentos conforme o modo de visualização
-      if (viewMode === "day") {
-        // Modo dia: buscar apenas para a data selecionada
-        appointmentsData = await appointmentService.getAppointmentsByDate(
-          format(date, "yyyy-MM-dd")
-        );
-      } else if (viewMode === "week") {
-        // Modo semana: buscar para 7 dias a partir da data selecionada
-        const promises = [];
-        for (let i = 0; i < 7; i++) {
-          const currentDate = addDays(date, i);
-          promises.push(
-            appointmentService.getAppointmentsByDate(
-              format(currentDate, "yyyy-MM-dd")
-            )
-          );
-        }
-        // Combinar resultados de todas as promessas
-        const results = await Promise.all(promises);
-        appointmentsData = results.flat();
-      }
-
-      setAppointments(appointmentsData);
-      applyFilters(
-        appointmentsData,
-        searchQuery,
-        statusFilter,
-        professionalFilter
-      );
-
-      // Anunciar número de agendamentos encontrados
-      const message =
-        appointmentsData.length === 0
-          ? "Nenhum agendamento encontrado para esta data"
-          : `Encontrados ${appointmentsData.length} agendamentos para ${format(
-              date,
-              "dd 'de' MMMM",
-              { locale: ptBR }
-            )}`;
-      speak(message);
-    } catch (error) {
-      logger.error(
-        `[SchedulingPage] - fetchAppointmentsForDate - Erro ao buscar agendamentos: ${error}`
-      );
-      speak("Erro ao buscar agendamentos");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Aplicar filtros aos agendamentos
   const applyFilters = (
     data: Appointment[],
     search: string,
     status: string,
     professional: string
-  ) => {
+  ): Appointment[] => {
     logger.debug(
       `[SchedulingPage] - applyFilters - Aplicando filtros: busca="${search}", status="${status}", profissional="${professional}"`
     );
@@ -265,7 +222,7 @@ export default function SchedulingPage() {
       });
     }
 
-    setFilteredAppointments(result);
+    return result;
   };
 
   // Handler para mudança nos filtros
@@ -280,15 +237,21 @@ export default function SchedulingPage() {
     switch (type) {
       case "search":
         setSearchQuery(value);
-        applyFilters(appointments, value, statusFilter, professionalFilter);
+        setFilteredAppointments(
+          applyFilters(appointments, value, statusFilter, professionalFilter)
+        );
         break;
       case "status":
         setStatusFilter(value);
-        applyFilters(appointments, searchQuery, value, professionalFilter);
+        setFilteredAppointments(
+          applyFilters(appointments, searchQuery, value, professionalFilter)
+        );
         break;
       case "professional":
         setProfessionalFilter(value);
-        applyFilters(appointments, searchQuery, statusFilter, value);
+        setFilteredAppointments(
+          applyFilters(appointments, searchQuery, statusFilter, value)
+        );
         break;
     }
   };
@@ -309,14 +272,10 @@ export default function SchedulingPage() {
   // Handler para seleção de agendamento
   const handleAppointmentSelect = (appointment: Appointment) => {
     logger.debug(
-      `[SchedulingPage] - handleAppointmentSelect - Agendamento selecionado ID: ${appointment.id}`
+      `[SchedulingPage] - handleAppointmentSelect - ID: ${appointment.id}`
     );
 
     setSelectedAppointment(appointment);
-
-    // Anunciar seleção de agendamento
-    const customer = customers.find((c) => c.id === appointment.customer_id);
-    speak(`Agendamento de ${customer?.customer_name || "cliente"} selecionado`);
   };
 
   // Handler para criar novo agendamento
@@ -364,21 +323,21 @@ export default function SchedulingPage() {
       );
 
       setAppointments(updatedAppointments);
-      applyFilters(
-        updatedAppointments,
-        searchQuery,
-        statusFilter,
-        professionalFilter
+      setFilteredAppointments(
+        applyFilters(
+          updatedAppointments,
+          searchQuery,
+          statusFilter,
+          professionalFilter
+        )
       );
 
       const statusText = STATUS_DISPLAY[newStatus];
-      speak(`Status alterado para ${statusText}`);
       toast.success(`Status alterado para ${statusText}`);
     } catch (error) {
       logger.error(
         `[SchedulingPage] - handleStatusChange - Erro ao alterar status: ${error}`
       );
-      speak("Erro ao alterar status");
       toast.error("Erro ao alterar status");
     } finally {
       setIsSubmitting(false);
@@ -490,13 +449,11 @@ export default function SchedulingPage() {
         </div>
 
         {/* Layout principal em 3 colunas */}
-        <div className="flex flex-col md:flex-row h-[calc(100vh-10rem)] overflow-hidden">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-10rem)] overflow-hidden min-h-0">
           {/* Coluna do calendário (esquerda) */}
           <div
             className={`w-full md:w-64 p-4 rounded-lg mb-4 md:mb-0 md:mr-4 overflow-auto ${
-              isDarkMode
-                ? "bg-neutral-800"
-                : "bg-white border border-gray-200"
+              isDarkMode ? "bg-neutral-800" : "bg-white border border-gray-200"
             }`}
           >
             <Calendar
@@ -507,10 +464,8 @@ export default function SchedulingPage() {
 
           {/* Coluna de agendamentos (central) */}
           <div
-            className={`flex-1 rounded-lg p-4 mb-4 md:mb-0 overflow-hidden flex flex-col ${
-              isDarkMode
-                ? "bg-neutral-800"
-                : "bg-white border border-gray-200"
+            className={`flex-1 rounded-lg p-4 mb-4 md:mb-0 overflow-hidden flex flex-col min-h-0 ${
+              isDarkMode ? "bg-neutral-800" : "bg-white border border-gray-200"
             }`}
           >
             {/* Filtros */}
@@ -521,9 +476,7 @@ export default function SchedulingPage() {
                   type="text"
                   placeholder="Buscar por nome do cliente..."
                   value={searchQuery}
-                  onChange={(e) =>
-                    handleFilterChange("search", e.target.value)
-                  }
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
                   className={`pl-8 w-full p-2 rounded-md border ${
                     isDarkMode
                       ? "bg-neutral-700 text-white border-neutral-600"
@@ -551,9 +504,7 @@ export default function SchedulingPage() {
                 {/* Filtro de status */}
                 <select
                   value={statusFilter}
-                  onChange={(e) =>
-                    handleFilterChange("status", e.target.value)
-                  }
+                  onChange={(e) => handleFilterChange("status", e.target.value)}
                   className={`p-2 rounded-md text-sm ${
                     isDarkMode
                       ? "bg-neutral-700 text-white border-neutral-600"
@@ -561,9 +512,7 @@ export default function SchedulingPage() {
                   } border focus:outline-none focus:ring-1 focus:ring-indigo-500`}
                 >
                   <option value="all">Todos os status</option>
-                  <option value="Pendente">
-                    {STATUS_DISPLAY["Pendente"]}
-                  </option>
+                  <option value="Pendente">{STATUS_DISPLAY["Pendente"]}</option>
                   <option value="Concluido">
                     {STATUS_DISPLAY["Concluido"]}
                   </option>
@@ -623,9 +572,7 @@ export default function SchedulingPage() {
           {/* Coluna de detalhes (direita) */}
           <div
             className={`w-full md:w-80 md:ml-4 rounded-lg p-4 overflow-y-auto ${
-              isDarkMode
-                ? "bg-neutral-800"
-                : "bg-white border border-slate-200"
+              isDarkMode ? "bg-neutral-800" : "bg-white border border-slate-200"
             }`}
           >
             {!selectedAppointment ? (
@@ -636,7 +583,7 @@ export default function SchedulingPage() {
               >
                 <p>Selecione um agendamento para ver os detalhes</p>
                 <p className="text-sm mt-1">
-                  ou clique em "Novo Agendamento" para criar
+                  ou clique em &quot;Novo Agendamento&quot; para criar
                 </p>
               </div>
             ) : (

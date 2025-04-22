@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Simples</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="kanban" role="main" aria-label="Quadro Kanban">
+        <header>
+            <h1>Kanban do Projeto</h1>
+            <button id="toggle-theme" aria-label="Alternar tema">🌓</button>
+            <button id="add-task" aria-label="Adicionar nova task">➕ Nova Task</button>
+        </header>
+        <div class="kanban-board" id="kanban-board">
+            <div class="kanban-column" data-status="todo">
+                <h2>Todo</h2>
+                <div class="kanban-tasks" id="column-todo"></div>
+            </div>
+            <div class="kanban-column" data-status="doing">
+                <h2>Em Progresso</h2>
+                <div class="kanban-tasks" id="column-doing"></div>
+            </div>
+            <div class="kanban-column" data-status="done">
+                <h2>Concluído</h2>
+                <div class="kanban-tasks" id="column-done"></div>
+            </div>
+        </div>
+    </div>
+    <dialog id="task-dialog">
+        <form method="dialog" id="task-form">
+            <label for="task-title">Título:</label>
+            <input type="text" id="task-title" name="title" required>
+            <label for="task-desc">Descrição:</label>
+            <textarea id="task-desc" name="desc" rows="2"></textarea>
+            <label for="task-status">Status:</label>
+            <select id="task-status" name="status">
+                <option value="todo">Todo</option>
+                <option value="doing">Em Progresso</option>
+                <option value="done">Concluído</option>
+            </select>
+            <menu>
+                <button value="cancel">Cancelar</button>
+                <button value="default" id="save-task">Salvar</button>
+            </menu>
+        </form>
+    </dialog>
+    <script src="script.js"></script>
+</body>
+
+</html>

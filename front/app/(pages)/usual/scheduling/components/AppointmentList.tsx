@@ -102,7 +102,7 @@ const AppointmentList = ({
 
   return (
     <div
-      className={`appointment-list-container ${className} flex flex-col h-full`}
+      className={`appointment-list-container ${className} flex flex-col h-full min-h-0`}
     >
       <div className="flex justify-between items-center mb-4">
         <h2
@@ -117,12 +117,12 @@ const AppointmentList = ({
 
       {/* Lista de agendamentos */}
       <div
-        className="flex-1 overflow-y-auto pr-1 appointment-scroll-container max-h-[calc(100%-6rem)]"
+        className="flex-1 overflow-y-auto pr-1 appointment-scroll-container max-h-[calc(100% - 6rem)]"
         role="list"
         aria-label="Lista de agendamentos"
         style={{
           scrollbarWidth: "thin",
-          scrollbarColor: isDarkMode ? "#4b5563 #1f2937" : "#d1d5db #f3f4f6",
+          scrollbarColor: isDarkMode ? "#262626 #18181b" : "#f1f5f9 #e2e8f0",
         }}
       >
         {isLoading ? (
@@ -290,7 +290,7 @@ const AppointmentList = ({
         .appointment-scroll-container::-webkit-scrollbar-thumb:hover {
           background-color: ${isDarkMode ? "#6b7280" : "#9ca3af"};
         }
-        
+
         /* Garantir comportamento de rolagem adequado */
         .appointment-list-container {
           min-height: 0;
@@ -298,7 +298,7 @@ const AppointmentList = ({
           display: flex;
           flex-direction: column;
         }
-        
+
         /* Garantir que o contêiner de rolagem seja flexível, mas com altura máxima */
         .appointment-scroll-container {
           overflow-y: auto;

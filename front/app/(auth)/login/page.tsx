@@ -47,12 +47,12 @@ export default function Login() {
   };
 
   const containerClass = isDarkMode
-    ? "bg-gray-900 text-white"
-    : "bg-gray-100 text-gray-900";
+    ? "bg-neutral-900 text-slate-100"
+    : "bg-slate-100 text-neutral-900";
 
   const inputClass = isDarkMode
-    ? "bg-gray-800 border-gray-700 text-white focus:border-emerald-500"
-    : "bg-white border-gray-300 text-gray-900 focus:border-emerald-500";
+    ? "bg-neutral-800 border-neutral-700 text-slate-100 focus:border-emerald-500"
+    : "bg-slate-100 border-slate-300 text-neutral-900 focus:border-emerald-500";
 
   const buttonClass =
     "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 flex items-center justify-center";
